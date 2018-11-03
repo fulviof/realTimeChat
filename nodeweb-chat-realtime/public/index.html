@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Chat simples</title>
+    <style>
+        body{
+            background: url('/img/bg-1.jpg');
+            margin: 0;
+            border: 0;
+            color: #2c3e50;
+        }
+        #chat{
+            position: fixed;
+            width: 100vw;
+            height: 84vh;
+            top: 0;
+            overflow: scroll;
+            overflow-x: hidden;
+        }
+        form{
+            position: fixed;
+            bottom: 0;
+            width: 100vw;
+            height: 15vh;
+        }
+        form input, form textarea{
+            border: 0;
+            padding: 0;
+            min-height: 100%;
+            height: 100%;
+            max-height: 100%;
+        }
+        form textarea{
+            width: 80%;
+            min-width: 80%;
+            max-width: 80%;
+        }
+        form input[type="submit"]{
+            width: 20%;
+            float: right;
+            background: #27ae60;
+            font-size: 22px;
+            color: #ecf0f1;
+        }
+
+        /* Class mensagem */
+        .msg{
+            background: #2ecc71;
+            min-width: 10vw;
+            width: auto;
+            max-width: 35vw;
+            margin: 2vw;
+        }
+        
+        .msg.my{
+            background: #3498db;
+            position: relative;
+            left: 60vw;
+        }
+
+        .msg.aviso{
+            background: transparent;
+            color: #FFF;
+            text-align: center;
+            width: auto;
+            max-width: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat"></div>
+    <form method="POST" action="" onsubmit="enviar(); return false;">
+        <textarea name="msg"></textarea>
+        <input type="submit" value="ENVIAR!">
+    </form>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/socket.io.js"></script>
+    <script>
+    const socket = io();
+    let name = prompt("Qual seu nome?");
+
+    function topBottom(){
+        $("#chat").scrollTop($("#chat")[0].scrollHeight);
+    }
+
+    function enviar(){
+        if($('textarea[name="msg"]').val().length <= 0)return;
+
+        socket.emit('msg-send', { name: name, msg: $('textarea[name="msg"]').val()});
+        $('textarea[name="msg"]').val("");
+        return false;
+    }
+
+    $(function(){
+        socket.on('entrou', (data) => {
+            $("#chat").append('<div class="msg aviso"><h5>cliente <b>'+data.client+'</b> entrou!</h5></div>');
+            topBottom();
+        });
+        socket.on('saiu', (data) => {
+            $("#chat").append('<div class="msg aviso"><h5>cliente <b>'+data.client+'</b> saiu!</h5></div>');
+            topBottom();
+        });
+
+
+        socket.on('msg', (data) => {
+            $("#chat").append('<div class="msg">'+
+                '<h5>'+data.client+'</h5>'+
+                '<p>'+data.msg+'</p>'+
+            '</div>');
+            topBottom();
+        });        
+        socket.on('msg-my', (data) => {
+            $("#chat").append('<div class="msg my">'+
+                '<h5>Eu</h5>'+
+                '<p>'+data.msg+'</p>'+
+            '</div>');
+            topBottom();
+        });
+    });
+    </script>
+</body>
+</html>
